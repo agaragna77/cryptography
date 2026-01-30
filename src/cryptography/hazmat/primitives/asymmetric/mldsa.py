@@ -171,14 +171,21 @@ class MlDsa65PublicKey(metaclass=abc.ABCMeta):
     def from_public_bytes(cls, data: bytes) -> MlDsa65PublicKey:
         from cryptography.hazmat.backends.openssl.backend import backend
 
-        if not backend.mldsa_supported():
-            raise UnsupportedAlgorithm(
-                "ML-DSA-65 is not supported by this backend.",
-                _Reasons.UNSUPPORTED_PUBLIC_KEY_ALGORITHM,
+        if backend.mldsa_supported():
+            return typing.cast(
+                MlDsa65PublicKey, rust_openssl.mldsa.from_public_bytes(data)
             )
-
-        return typing.cast(
-            MlDsa65PublicKey, rust_openssl.mldsa.from_public_bytes(data)
+        if backend.mldsa65_supported():
+            m65 = getattr(rust_openssl, "mldsa65", None)
+            if m65 is None:
+                raise UnsupportedAlgorithm(
+                    "ML-DSA-65 is not supported by this backend.",
+                    _Reasons.UNSUPPORTED_PUBLIC_KEY_ALGORITHM,
+                )
+            return typing.cast(MlDsa65PublicKey, m65.from_public_bytes(data))
+        raise UnsupportedAlgorithm(
+            "ML-DSA-65 is not supported by this backend.",
+            _Reasons.UNSUPPORTED_PUBLIC_KEY_ALGORITHM,
         )
 
     @abc.abstractmethod
@@ -230,7 +237,10 @@ class MlDsa65PublicKey(metaclass=abc.ABCMeta):
         """
 
 
-if hasattr(rust_openssl, "mldsa") and hasattr(
+_mldsa65_mod = getattr(rust_openssl, "mldsa65", None)
+if _mldsa65_mod is not None and hasattr(_mldsa65_mod, "MlDsa65PublicKey"):
+    MlDsa65PublicKey.register(_mldsa65_mod.MlDsa65PublicKey)
+elif hasattr(rust_openssl, "mldsa") and hasattr(
     rust_openssl.mldsa, "MlDsa65PublicKey"
 ):
     MlDsa65PublicKey.register(rust_openssl.mldsa.MlDsa65PublicKey)
@@ -241,28 +251,42 @@ class MlDsa65PrivateKey(metaclass=abc.ABCMeta):
     def generate(cls) -> MlDsa65PrivateKey:
         from cryptography.hazmat.backends.openssl.backend import backend
 
-        if not backend.mldsa_supported():
-            raise UnsupportedAlgorithm(
-                "ML-DSA-65 is not supported by this backend.",
-                _Reasons.UNSUPPORTED_PUBLIC_KEY_ALGORITHM,
+        if backend.mldsa_supported():
+            return typing.cast(
+                MlDsa65PrivateKey, rust_openssl.mldsa.generate_key()
             )
-
-        return typing.cast(
-            MlDsa65PrivateKey, rust_openssl.mldsa.generate_key()
+        if backend.mldsa65_supported():
+            m65 = getattr(rust_openssl, "mldsa65", None)
+            if m65 is None:
+                raise UnsupportedAlgorithm(
+                    "ML-DSA-65 is not supported by this backend.",
+                    _Reasons.UNSUPPORTED_PUBLIC_KEY_ALGORITHM,
+                )
+            return typing.cast(MlDsa65PrivateKey, m65.generate_key())
+        raise UnsupportedAlgorithm(
+            "ML-DSA-65 is not supported by this backend.",
+            _Reasons.UNSUPPORTED_PUBLIC_KEY_ALGORITHM,
         )
 
     @classmethod
     def from_seed_bytes(cls, data: Buffer) -> MlDsa65PrivateKey:
         from cryptography.hazmat.backends.openssl.backend import backend
 
-        if not backend.mldsa_supported():
-            raise UnsupportedAlgorithm(
-                "ML-DSA-65 is not supported by this backend.",
-                _Reasons.UNSUPPORTED_PUBLIC_KEY_ALGORITHM,
+        if backend.mldsa_supported():
+            return typing.cast(
+                MlDsa65PrivateKey, rust_openssl.mldsa.from_seed_bytes(data)
             )
-
-        return typing.cast(
-            MlDsa65PrivateKey, rust_openssl.mldsa.from_seed_bytes(data)
+        if backend.mldsa65_supported():
+            m65 = getattr(rust_openssl, "mldsa65", None)
+            if m65 is None:
+                raise UnsupportedAlgorithm(
+                    "ML-DSA-65 is not supported by this backend.",
+                    _Reasons.UNSUPPORTED_PUBLIC_KEY_ALGORITHM,
+                )
+            return typing.cast(MlDsa65PrivateKey, m65.from_seed_bytes(data))
+        raise UnsupportedAlgorithm(
+            "ML-DSA-65 is not supported by this backend.",
+            _Reasons.UNSUPPORTED_PUBLIC_KEY_ALGORITHM,
         )
 
     @abc.abstractmethod
@@ -313,7 +337,9 @@ class MlDsa65PrivateKey(metaclass=abc.ABCMeta):
         """
 
 
-if hasattr(rust_openssl, "mldsa") and hasattr(
+if _mldsa65_mod is not None and hasattr(_mldsa65_mod, "MlDsa65PrivateKey"):
+    MlDsa65PrivateKey.register(_mldsa65_mod.MlDsa65PrivateKey)
+elif hasattr(rust_openssl, "mldsa") and hasattr(
     rust_openssl.mldsa, "MlDsa65PrivateKey"
 ):
     MlDsa65PrivateKey.register(rust_openssl.mldsa.MlDsa65PrivateKey)

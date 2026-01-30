@@ -123,6 +123,7 @@ class SignatureAlgorithmOID:
     GOSTR3410_2012_WITH_3411_2012_256 = ObjectIdentifier("1.2.643.7.1.1.3.2")
     GOSTR3410_2012_WITH_3411_2012_512 = ObjectIdentifier("1.2.643.7.1.1.3.3")
     ML_DSA_44 = ObjectIdentifier("2.16.840.1.101.3.4.3.17")
+    ML_DSA_65 = ObjectIdentifier("2.16.840.1.101.3.4.3.18")
 
 
 _SIG_OIDS_TO_HASH: dict[ObjectIdentifier, hashes.HashAlgorithm | None] = {
@@ -155,6 +156,7 @@ _SIG_OIDS_TO_HASH: dict[ObjectIdentifier, hashes.HashAlgorithm | None] = {
     SignatureAlgorithmOID.GOSTR3410_2012_WITH_3411_2012_256: None,
     SignatureAlgorithmOID.GOSTR3410_2012_WITH_3411_2012_512: None,
     SignatureAlgorithmOID.ML_DSA_44: None,
+    SignatureAlgorithmOID.ML_DSA_65: None,
 }
 
 
@@ -184,6 +186,7 @@ class PublicKeyAlgorithmOID:
     ED25519 = ObjectIdentifier("1.3.101.112")
     ED448 = ObjectIdentifier("1.3.101.113")
     ML_DSA_44 = ObjectIdentifier("2.16.840.1.101.3.4.3.17")
+    ML_DSA_65 = ObjectIdentifier("2.16.840.1.101.3.4.3.18")
 
 
 class ExtendedKeyUsageOID:
@@ -289,6 +292,7 @@ _OID_NAMES = {
         "GOST R 34.10-2012 with GOST R 34.11-2012 (512 bit)"
     ),
     SignatureAlgorithmOID.ML_DSA_44: "ml-dsa-44",
+    SignatureAlgorithmOID.ML_DSA_65: "ml-dsa-65",
     HashAlgorithmOID.SHA1: "sha1",
     HashAlgorithmOID.SHA224: "sha224",
     HashAlgorithmOID.SHA256: "sha256",

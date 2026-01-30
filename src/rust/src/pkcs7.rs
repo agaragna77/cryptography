@@ -512,7 +512,8 @@ fn sign_and_serialize<'p>(
         // For ML-DSA, py_hash_alg is None, and we have to use SHA-512 for message digest
         // per RFC 9882 Section 3.3
         let hash_alg_for_digest = if py_hash_alg.is_none()
-            && (py_private_key.is_instance(&types::ML_DSA_44_PRIVATE_KEY.get(py)?)?)
+            && (py_private_key.is_instance(&types::ML_DSA_44_PRIVATE_KEY.get(py)?)?
+                || py_private_key.is_instance(&types::ML_DSA_65_PRIVATE_KEY.get(py)?)?)
         {
             types::HASHES_MODULE.get(py)?.getattr("SHA512")?.call0()?
         } else {
