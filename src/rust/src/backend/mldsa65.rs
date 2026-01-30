@@ -59,11 +59,22 @@ fn from_public_bytes(data: &[u8]) -> pyo3::PyResult<MlDsa65PublicKey> {
 
 #[pyo3::pymethods]
 impl MlDsa65PrivateKey {
+    #[pyo3(signature = (data, context=None))]
     fn sign<'p>(
         &self,
         py: pyo3::Python<'p>,
         data: CffiBuf<'_>,
+        context: Option<CffiBuf<'_>>,
     ) -> CryptographyResult<pyo3::Bound<'p, pyo3::types::PyBytes>> {
+        if let Some(ctx) = context {
+            let signature = openssl::pkey_ml_dsa::sign_with_context(
+                &self.pkey,
+                openssl::pkey_ml_dsa::Variant::MlDsa65,
+                data.as_bytes(),
+                ctx.as_bytes(),
+            )?;
+            return Ok(pyo3::types::PyBytes::new(py, &signature));
+        }
         let mut signer = openssl::sign::Signer::new_without_digest(&self.pkey)?;
         let len = signer.len()?;
         Ok(pyo3::types::PyBytes::new_with(py, len, |b| {
@@ -81,13 +92,7 @@ impl MlDsa65PrivateKey {
         data: CffiBuf<'_>,
         context: CffiBuf<'_>,
     ) -> CryptographyResult<pyo3::Bound<'p, pyo3::types::PyBytes>> {
-        let signature = openssl::pkey_ml_dsa::sign_with_context(
-            &self.pkey,
-            openssl::pkey_ml_dsa::Variant::MlDsa65,
-            data.as_bytes(),
-            context.as_bytes(),
-        )?;
-        Ok(pyo3::types::PyBytes::new(py, &signature))
+        self.sign(py, data, Some(context))
     }
 
     fn public_key(&self) -> CryptographyResult<MlDsa65PublicKey> {
@@ -153,10 +158,27 @@ impl MlDsa65PrivateKey {
 
 #[pyo3::pymethods]
 impl MlDsa65PublicKey {
-    fn verify(&self, signature: CffiBuf<'_>, data: CffiBuf<'_>) -> CryptographyResult<()> {
-        let valid = openssl::sign::Verifier::new_without_digest(&self.pkey)?
-            .verify_oneshot(signature.as_bytes(), data.as_bytes())
-            .unwrap_or(false);
+    #[pyo3(signature = (signature, data, context=None))]
+    fn verify(
+        &self,
+        signature: CffiBuf<'_>,
+        data: CffiBuf<'_>,
+        context: Option<CffiBuf<'_>>,
+    ) -> CryptographyResult<()> {
+        let valid = if let Some(ctx) = context {
+            openssl::pkey_ml_dsa::verify_with_context(
+                &self.pkey,
+                openssl::pkey_ml_dsa::Variant::MlDsa65,
+                data.as_bytes(),
+                signature.as_bytes(),
+                ctx.as_bytes(),
+            )
+            .unwrap_or(false)
+        } else {
+            openssl::sign::Verifier::new_without_digest(&self.pkey)?
+                .verify_oneshot(signature.as_bytes(), data.as_bytes())
+                .unwrap_or(false)
+        };
 
         if !valid {
             return Err(CryptographyError::from(
@@ -173,22 +195,7 @@ impl MlDsa65PublicKey {
         data: CffiBuf<'_>,
         context: CffiBuf<'_>,
     ) -> CryptographyResult<()> {
-        let valid = openssl::pkey_ml_dsa::verify_with_context(
-            &self.pkey,
-            openssl::pkey_ml_dsa::Variant::MlDsa65,
-            data.as_bytes(),
-            signature.as_bytes(),
-            context.as_bytes(),
-        )
-        .unwrap_or(false);
-
-        if !valid {
-            return Err(CryptographyError::from(
-                exceptions::InvalidSignature::new_err(()),
-            ));
-        }
-
-        Ok(())
+        self.verify(signature, data, Some(context))
     }
 
     fn public_bytes_raw<'p>(
