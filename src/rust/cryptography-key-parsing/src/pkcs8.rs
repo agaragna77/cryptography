@@ -617,7 +617,7 @@ pub fn serialize_private_key(
                     // RFC 9881 Section 6: Use seed-only format (recommended for storage efficiency)
                     // Encode as [0] IMPLICIT OCTET STRING (SIZE (32))
                     let seed = ml_dsa_params.private_key_seed()?;
-                    let key_value = MlDsa65PrivateKeyValue::Seed(&seed);
+                    let key_value = MlDsa65PrivateKeyValue::Seed(seed);
                     let private_key_der = asn1::write_single(&key_value)?;
                     (AlgorithmParameters::MlDsa65, private_key_der)
                 } else {
