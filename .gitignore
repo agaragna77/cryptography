@@ -16,3 +16,7 @@ target/
 .rust-cov/
 *.lcov
 *.profdata
+.cursorrules
+.local/errors.log
+.local/set-boring.sh
+.local/set-openssl.sh

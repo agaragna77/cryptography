@@ -297,13 +297,13 @@ class Backend:
         return True
 
     def mldsa44_supported(self) -> bool:
-        return rust_openssl.CRYPTOGRAPHY_MLDSA_SUPPORT
+        return rust_openssl.CRYPTOGRAPHY_MLDSA44_SUPPORT
 
     def mldsa65_supported(self) -> bool:
-        return rust_openssl.CRYPTOGRAPHY_MLDSA_SUPPORT
+        return rust_openssl.CRYPTOGRAPHY_MLDSA65_SUPPORT
 
     def mldsa87_supported(self) -> bool:
-        return rust_openssl.CRYPTOGRAPHY_MLDSA_SUPPORT
+        return rust_openssl.CRYPTOGRAPHY_MLDSA87_SUPPORT
 
 
 backend = Backend()

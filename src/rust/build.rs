@@ -3,6 +3,7 @@
 // for complete details.
 
 use std::env;
+use std::path::Path;
 
 #[allow(clippy::unusual_byte_groupings)]
 fn main() {
@@ -23,6 +24,9 @@ fn main() {
         if version >= 0x3_05_00_00_0 {
             println!("cargo:rustc-cfg=CRYPTOGRAPHY_OPENSSL_350_OR_GREATER");
             println!("cargo:rustc-cfg=CRYPTOGRAPHY_MLDSA_SUPPORT");
+            println!("cargo:rustc-cfg=CRYPTOGRAPHY_MLDSA44_SUPPORT");
+            println!("cargo:rustc-cfg=CRYPTOGRAPHY_MLDSA65_SUPPORT");
+            println!("cargo:rustc-cfg=CRYPTOGRAPHY_MLDSA87_SUPPORT");
         }
     }
 
@@ -30,8 +34,59 @@ fn main() {
         println!("cargo:rustc-cfg=CRYPTOGRAPHY_IS_LIBRESSL");
     }
 
+    // BoringSSL: ML-DSA is available in 0.20251124.0 (November 2025) or later.
+    // Detect via capability probe (works with binary-only installs) or CRYPTOGRAPHY_BORINGSSL_VERSION.
     if env::var("DEP_OPENSSL_BORINGSSL").is_ok() {
         println!("cargo:rustc-cfg=CRYPTOGRAPHY_IS_BORINGSSL");
+        let mut mldsa_supported = false;
+
+        // Prefer probe when OPENSSL_DIR is set (works with binary distribution).
+        if let Ok(openssl_dir) = env::var("OPENSSL_DIR") {
+            let include_dir = Path::new(&openssl_dir).join("include");
+            if include_dir.is_dir() {
+                let probe_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("probe_mldsa.c");
+                if probe_path.is_file() {
+                    mldsa_supported = cc::Build::new()
+                        .file(&probe_path)
+                        .include(&include_dir)
+                        .warnings(false)
+                        .try_compile("probe_mldsa")
+                        .is_ok();
+                }
+            }
+        }
+
+        // Fallback: version env var (e.g. when OPENSSL_DIR is not set).
+        if !mldsa_supported {
+            const BORINGSSL_MLDSA_MIN_DATE: u32 = 20251124; // 0.20251124.0
+            if let Ok(ver) = env::var("CRYPTOGRAPHY_BORINGSSL_VERSION") {
+                let date = ver
+                    .split('.')
+                    .nth(1)
+                    .and_then(|s| s.parse::<u32>().ok());
+                if date.is_some_and(|d| d >= BORINGSSL_MLDSA_MIN_DATE) {
+                    mldsa_supported = true;
+                } else {
+                    let safe_val = ver
+                        .lines()
+                        .next()
+                        .unwrap_or("")
+                        .chars()
+                        .take(80)
+                        .collect::<String>();
+                    println!("cargo:warning=CRYPTOGRAPHY_BORINGSSL_VERSION invalid or too old (value: {})", safe_val);
+                }
+            }
+        }
+
+        if mldsa_supported {
+            println!("cargo:rustc-cfg=CRYPTOGRAPHY_MLDSA_SUPPORT");
+            println!("cargo:rustc-cfg=CRYPTOGRAPHY_MLDSA44_SUPPORT");
+            // BoringSSL: only ML-DSA-44 is implemented; 65/87 raise unsupported at runtime.
+            println!("cargo:warning=CRYPTOGRAPHY_MLDSA_SUPPORT enabled (BoringSSL, MLDSA44 only)");
+        } else {
+            println!("cargo:warning=CRYPTOGRAPHY_MLDSA_SUPPORT disabled (BoringSSL)");
+        }
     }
 
     if env::var("DEP_OPENSSL_AWSLC").is_ok() {

@@ -284,6 +284,12 @@ mod _rust {
 
         #[pymodule_export]
         const CRYPTOGRAPHY_MLDSA_SUPPORT: bool = cfg!(CRYPTOGRAPHY_MLDSA_SUPPORT);
+        #[pymodule_export]
+        const CRYPTOGRAPHY_MLDSA44_SUPPORT: bool = cfg!(CRYPTOGRAPHY_MLDSA44_SUPPORT);
+        #[pymodule_export]
+        const CRYPTOGRAPHY_MLDSA65_SUPPORT: bool = cfg!(CRYPTOGRAPHY_MLDSA65_SUPPORT);
+        #[pymodule_export]
+        const CRYPTOGRAPHY_MLDSA87_SUPPORT: bool = cfg!(CRYPTOGRAPHY_MLDSA87_SUPPORT);
 
         #[pymodule_init]
         fn init(openssl_mod: &pyo3::Bound<'_, pyo3::types::PyModule>) -> pyo3::PyResult<()> {
