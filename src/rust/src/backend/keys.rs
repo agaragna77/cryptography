@@ -137,7 +137,13 @@ fn private_key_from_pkey<'p>(
                     .into_any());
             }
         }
-        #[cfg(not(any(CRYPTOGRAPHY_IS_BORINGSSL, CRYPTOGRAPHY_IS_AWSLC)))]
+        #[cfg(any(
+            not(any(CRYPTOGRAPHY_IS_BORINGSSL, CRYPTOGRAPHY_IS_AWSLC)),
+            all(
+                CRYPTOGRAPHY_IS_BORINGSSL,
+                CRYPTOGRAPHY_MLDSA87_SUPPORT
+            ),
+        ))]
         {
             if pkey
                 .ml_dsa(openssl::pkey_ml_dsa::Variant::MlDsa87)?
@@ -306,7 +312,13 @@ fn public_key_from_pkey<'p>(
                     .into_any());
             }
         }
-        #[cfg(not(any(CRYPTOGRAPHY_IS_BORINGSSL, CRYPTOGRAPHY_IS_AWSLC)))]
+        #[cfg(any(
+            not(any(CRYPTOGRAPHY_IS_BORINGSSL, CRYPTOGRAPHY_IS_AWSLC)),
+            all(
+                CRYPTOGRAPHY_IS_BORINGSSL,
+                CRYPTOGRAPHY_MLDSA87_SUPPORT
+            ),
+        ))]
         {
             if pkey
                 .ml_dsa(openssl::pkey_ml_dsa::Variant::MlDsa87)?

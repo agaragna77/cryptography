@@ -25,12 +25,24 @@ pub(crate) mod keys;
 pub(crate) mod mldsa;
 #[cfg(all(
     CRYPTOGRAPHY_MLDSA_SUPPORT,
-    not(any(CRYPTOGRAPHY_IS_BORINGSSL, CRYPTOGRAPHY_IS_AWSLC))
+    any(
+        not(any(CRYPTOGRAPHY_IS_BORINGSSL, CRYPTOGRAPHY_IS_AWSLC)),
+        all(
+            CRYPTOGRAPHY_IS_BORINGSSL,
+            CRYPTOGRAPHY_MLDSA65_SUPPORT
+        ),
+    ),
 ))]
 pub(crate) mod mldsa65;
 #[cfg(all(
     CRYPTOGRAPHY_MLDSA_SUPPORT,
-    not(any(CRYPTOGRAPHY_IS_BORINGSSL, CRYPTOGRAPHY_IS_AWSLC))
+    any(
+        not(any(CRYPTOGRAPHY_IS_BORINGSSL, CRYPTOGRAPHY_IS_AWSLC)),
+        all(
+            CRYPTOGRAPHY_IS_BORINGSSL,
+            CRYPTOGRAPHY_MLDSA87_SUPPORT
+        ),
+    ),
 ))]
 pub(crate) mod mldsa87;
 pub(crate) mod poly1305;

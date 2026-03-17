@@ -247,13 +247,25 @@ mod _rust {
         use crate::backend::mldsa::mldsa;
         #[cfg(all(
             CRYPTOGRAPHY_MLDSA_SUPPORT,
-            not(any(CRYPTOGRAPHY_IS_BORINGSSL, CRYPTOGRAPHY_IS_AWSLC))
+            any(
+                not(any(CRYPTOGRAPHY_IS_BORINGSSL, CRYPTOGRAPHY_IS_AWSLC)),
+                all(
+                    CRYPTOGRAPHY_IS_BORINGSSL,
+                    CRYPTOGRAPHY_MLDSA65_SUPPORT
+                ),
+            ),
         ))]
         #[pymodule_export]
         use crate::backend::mldsa65::mldsa65;
         #[cfg(all(
             CRYPTOGRAPHY_MLDSA_SUPPORT,
-            not(any(CRYPTOGRAPHY_IS_BORINGSSL, CRYPTOGRAPHY_IS_AWSLC))
+            any(
+                not(any(CRYPTOGRAPHY_IS_BORINGSSL, CRYPTOGRAPHY_IS_AWSLC)),
+                all(
+                    CRYPTOGRAPHY_IS_BORINGSSL,
+                    CRYPTOGRAPHY_MLDSA87_SUPPORT
+                ),
+            ),
         ))]
         #[pymodule_export]
         use crate::backend::mldsa87::mldsa87;
