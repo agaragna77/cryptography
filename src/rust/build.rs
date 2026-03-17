@@ -83,8 +83,8 @@ fn main() {
             println!("cargo:rustc-cfg=CRYPTOGRAPHY_MLDSA_SUPPORT");
             println!("cargo:rustc-cfg=CRYPTOGRAPHY_MLDSA44_SUPPORT");
             println!("cargo:rustc-cfg=CRYPTOGRAPHY_MLDSA65_SUPPORT");
-            // BoringSSL: ML-DSA-44 and ML-DSA-65 implemented; 87 raise unsupported at runtime.
-            println!("cargo:warning=CRYPTOGRAPHY_MLDSA_SUPPORT enabled (BoringSSL, MLDSA44/65)");
+            println!("cargo:rustc-cfg=CRYPTOGRAPHY_MLDSA87_SUPPORT");
+            println!("cargo:warning=CRYPTOGRAPHY_MLDSA_SUPPORT enabled (BoringSSL, MLDSA44/65/87)");
         } else {
             println!("cargo:warning=CRYPTOGRAPHY_MLDSA_SUPPORT disabled (BoringSSL)");
         }
