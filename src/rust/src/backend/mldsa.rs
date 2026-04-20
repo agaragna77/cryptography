@@ -12,19 +12,19 @@ use crate::exceptions;
 
 // ML-DSA-44 (OpenSSL 3.5+)
 
-#[cfg(CRYPTOGRAPHY_OPENSSL_350_OR_GREATER)]
+#[cfg(CRYPTOGRAPHY_MLDSA44_SUPPORT)]
 #[pyo3::pyclass(frozen, module = "cryptography.hazmat.bindings._rust.openssl.mldsa")]
 pub(crate) struct MlDsa44PrivateKey {
     pkey: openssl::pkey::PKey<openssl::pkey::Private>,
 }
 
-#[cfg(CRYPTOGRAPHY_OPENSSL_350_OR_GREATER)]
+#[cfg(CRYPTOGRAPHY_MLDSA44_SUPPORT)]
 #[pyo3::pyclass(frozen, module = "cryptography.hazmat.bindings._rust.openssl.mldsa")]
 pub(crate) struct MlDsa44PublicKey {
     pkey: openssl::pkey::PKey<openssl::pkey::Public>,
 }
 
-#[cfg(CRYPTOGRAPHY_OPENSSL_350_OR_GREATER)]
+#[cfg(CRYPTOGRAPHY_MLDSA44_SUPPORT)]
 #[pyo3::pymethods]
 impl MlDsa44PrivateKey {
     fn sign<'p>(
@@ -69,23 +69,36 @@ impl MlDsa44PrivateKey {
         &self,
         py: pyo3::Python<'p>,
     ) -> CryptographyResult<pyo3::Bound<'p, pyo3::types::PyBytes>> {
-        // Serialize to DER to extract the seed (RFC 9881 Section 6)
-        // The seed is stored in the privateKey OCTET STRING as [0] IMPLICIT OCTET STRING (SIZE (32))
-        let der = self.pkey.private_key_to_der()?;
-
-        // The seed is in the last 34 bytes of the DER encoding
-        // Structure: ... OCTET STRING { [0] tag (0x80) + length (0x20) + 32-byte seed }
-        if der.len() < 34 {
-            return Err(CryptographyError::from(
-                pyo3::exceptions::PyValueError::new_err(
-                    "Invalid ML-DSA-44 private key DER encoding",
-                ),
-            ));
+        #[cfg(CRYPTOGRAPHY_IS_BORINGSSL)]
+        {
+            // BoringSSL: use direct seed API; i2d_PrivateKey does not support ML-DSA.
+            let seed = openssl::pkey_ml_dsa::private_seed_bytes(
+                &self.pkey,
+                openssl::pkey_ml_dsa::Variant::MlDsa44,
+            )?;
+            return Ok(pyo3::types::PyBytes::new(py, &seed));
         }
 
-        // Skip the tag (0x80) and length (0x20) bytes to get the 32-byte seed
-        let seed = &der[der.len() - 32..];
-        Ok(pyo3::types::PyBytes::new(py, seed))
+        #[cfg(not(CRYPTOGRAPHY_IS_BORINGSSL))]
+        {
+            // OpenSSL: serialize to DER and extract the seed (RFC 9881 Section 6)
+            // The seed is stored in the privateKey OCTET STRING as [0] IMPLICIT OCTET STRING (SIZE (32))
+            let der = self.pkey.private_key_to_der()?;
+
+            // The seed is in the last 34 bytes of the DER encoding
+            // Structure: ... OCTET STRING { [0] tag (0x80) + length (0x20) + 32-byte seed }
+            if der.len() < 34 {
+                return Err(CryptographyError::from(
+                    pyo3::exceptions::PyValueError::new_err(
+                        "Invalid ML-DSA-44 private key DER encoding",
+                    ),
+                ));
+            }
+
+            // Skip the tag (0x80) and length (0x20) bytes to get the 32-byte seed
+            let seed = &der[der.len() - 32..];
+            Ok(pyo3::types::PyBytes::new(py, seed))
+        }
     }
 
     fn private_bytes<'p>(
@@ -119,7 +132,7 @@ impl MlDsa44PrivateKey {
     }
 }
 
-#[cfg(CRYPTOGRAPHY_OPENSSL_350_OR_GREATER)]
+#[cfg(CRYPTOGRAPHY_MLDSA44_SUPPORT)]
 #[pyo3::pymethods]
 impl MlDsa44PublicKey {
     fn verify(&self, signature: CffiBuf<'_>, data: CffiBuf<'_>) -> CryptographyResult<()> {
@@ -360,7 +373,7 @@ impl MlDsa65PublicKey {
 fn generate_key<'p>(py: pyo3::Python<'p>) -> CryptographyResult<pyo3::Bound<'p, pyo3::PyAny>> {
     use pyo3::IntoPyObject;
 
-    #[cfg(CRYPTOGRAPHY_OPENSSL_350_OR_GREATER)]
+    #[cfg(CRYPTOGRAPHY_MLDSA44_SUPPORT)]
     {
         return Ok(MlDsa44PrivateKey {
             pkey: openssl::pkey::PKey::generate_ml_dsa(openssl::pkey_ml_dsa::Variant::MlDsa44)?,
@@ -388,7 +401,7 @@ fn from_seed_bytes<'p>(
 ) -> CryptographyResult<pyo3::Bound<'p, pyo3::PyAny>> {
     use pyo3::IntoPyObject;
 
-    #[cfg(CRYPTOGRAPHY_OPENSSL_350_OR_GREATER)]
+    #[cfg(CRYPTOGRAPHY_MLDSA44_SUPPORT)]
     {
         let pkey = openssl::pkey::PKey::private_key_from_seed(
             openssl::pkey_ml_dsa::Variant::MlDsa44,
@@ -424,7 +437,7 @@ fn from_public_bytes<'p>(
 ) -> CryptographyResult<pyo3::Bound<'p, pyo3::PyAny>> {
     use pyo3::IntoPyObject;
 
-    #[cfg(CRYPTOGRAPHY_OPENSSL_350_OR_GREATER)]
+    #[cfg(CRYPTOGRAPHY_MLDSA44_SUPPORT)]
     {
         let pkey =
             openssl::pkey::PKey::public_key_from_raw_bytes_ex(data, "ML-DSA-44").map_err(|_| {
@@ -455,7 +468,7 @@ pub(crate) fn private_key_from_pkey<'p>(
 ) -> CryptographyResult<pyo3::Bound<'p, pyo3::PyAny>> {
     use pyo3::IntoPyObject;
 
-    #[cfg(CRYPTOGRAPHY_OPENSSL_350_OR_GREATER)]
+    #[cfg(CRYPTOGRAPHY_MLDSA44_SUPPORT)]
     {
         return Ok(MlDsa44PrivateKey {
             pkey: pkey.to_owned(),
@@ -483,7 +496,7 @@ pub(crate) fn public_key_from_pkey<'p>(
 ) -> CryptographyResult<pyo3::Bound<'p, pyo3::PyAny>> {
     use pyo3::IntoPyObject;
 
-    #[cfg(CRYPTOGRAPHY_OPENSSL_350_OR_GREATER)]
+    #[cfg(CRYPTOGRAPHY_MLDSA44_SUPPORT)]
     {
         return Ok(MlDsa44PublicKey {
             pkey: pkey.to_owned(),
@@ -510,7 +523,7 @@ pub(crate) mod mldsa {
     #[pymodule_export]
     use super::{from_public_bytes, from_seed_bytes, generate_key};
 
-    #[cfg(CRYPTOGRAPHY_OPENSSL_350_OR_GREATER)]
+    #[cfg(CRYPTOGRAPHY_MLDSA44_SUPPORT)]
     #[pymodule_export]
     use super::{MlDsa44PrivateKey, MlDsa44PublicKey};
 
