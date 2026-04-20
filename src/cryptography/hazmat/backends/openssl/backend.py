@@ -273,7 +273,10 @@ class Backend:
         )
 
     def mldsa_supported(self) -> bool:
-        return rust_openssl.CRYPTOGRAPHY_IS_AWSLC
+        return (
+            rust_openssl.CRYPTOGRAPHY_MLDSA_SUPPORT
+            or rust_openssl.CRYPTOGRAPHY_IS_AWSLC
+        )
 
     def ed25519_supported(self) -> bool:
         return not self._fips_enabled
