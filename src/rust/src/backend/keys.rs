@@ -126,13 +126,16 @@ fn private_key_from_pkey<'p>(
         {
             return crate::backend::mldsa::private_key_from_pkey(py, pkey);
         }
-        if pkey
-            .ml_dsa(openssl::pkey_ml_dsa::Variant::MlDsa65)?
-            .is_some()
+        #[cfg(CRYPTOGRAPHY_MLDSA65_SUPPORT)]
         {
-            return Ok(crate::backend::mldsa65::private_key_from_pkey(pkey)
-                .into_pyobject(py)?
-                .into_any());
+            if pkey
+                .ml_dsa(openssl::pkey_ml_dsa::Variant::MlDsa65)?
+                .is_some()
+            {
+                return Ok(crate::backend::mldsa65::private_key_from_pkey(pkey)
+                    .into_pyobject(py)?
+                    .into_any());
+            }
         }
         #[cfg(not(any(CRYPTOGRAPHY_IS_BORINGSSL, CRYPTOGRAPHY_IS_AWSLC)))]
         {
@@ -292,13 +295,16 @@ fn public_key_from_pkey<'p>(
         {
             return crate::backend::mldsa::public_key_from_pkey(py, pkey);
         }
-        if pkey
-            .ml_dsa(openssl::pkey_ml_dsa::Variant::MlDsa65)?
-            .is_some()
+        #[cfg(CRYPTOGRAPHY_MLDSA65_SUPPORT)]
         {
-            return Ok(crate::backend::mldsa65::public_key_from_pkey(pkey)
-                .into_pyobject(py)?
-                .into_any());
+            if pkey
+                .ml_dsa(openssl::pkey_ml_dsa::Variant::MlDsa65)?
+                .is_some()
+            {
+                return Ok(crate::backend::mldsa65::public_key_from_pkey(pkey)
+                    .into_pyobject(py)?
+                    .into_any());
+            }
         }
         #[cfg(not(any(CRYPTOGRAPHY_IS_BORINGSSL, CRYPTOGRAPHY_IS_AWSLC)))]
         {

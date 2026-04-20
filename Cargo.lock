@@ -187,7 +187,6 @@ checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
 [[package]]
 name = "openssl"
 version = "0.10.76"
-source = "git+https://github.com/abbra/rust-openssl.git?branch=pqc-prs#0e197fafdf18ac30f97bef6cf809a6d5e3ad8db6"
 dependencies = [
  "bitflags",
  "cfg-if",
@@ -201,7 +200,6 @@ dependencies = [
 [[package]]
 name = "openssl-macros"
 version = "0.1.1"
-source = "git+https://github.com/abbra/rust-openssl.git?branch=pqc-prs#0e197fafdf18ac30f97bef6cf809a6d5e3ad8db6"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -211,7 +209,6 @@ dependencies = [
 [[package]]
 name = "openssl-sys"
 version = "0.9.112"
-source = "git+https://github.com/abbra/rust-openssl.git?branch=pqc-prs#0e197fafdf18ac30f97bef6cf809a6d5e3ad8db6"
 dependencies = [
  "cc",
  "libc",

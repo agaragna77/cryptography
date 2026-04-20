@@ -38,5 +38,6 @@ self_cell = "1"
 overflow-checks = true
 
 [patch.crates-io]
-openssl-sys = { git = "https://github.com/abbra/rust-openssl.git", branch = "pqc-prs" }
-openssl = { git = "https://github.com/abbra/rust-openssl.git", branch = "pqc-prs" }
+# Sibling checkout: exposes `pkey_ml_dsa` under `boringssl` (abbra/git rev 0e197fa only gates ossl350).
+openssl-sys = { path = "../rust-openssl/openssl-sys" }
+openssl = { path = "../rust-openssl/openssl" }
