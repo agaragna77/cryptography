@@ -79,7 +79,6 @@ name = "cryptography-key-parsing"
 version = "0.1.0"
 dependencies = [
  "asn1",
- "cc",
  "cfg-if",
  "cryptography-crypto",
  "cryptography-openssl",
