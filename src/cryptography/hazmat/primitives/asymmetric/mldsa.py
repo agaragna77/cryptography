@@ -343,3 +343,157 @@ elif hasattr(rust_openssl, "mldsa") and hasattr(
     rust_openssl.mldsa, "MlDsa65PrivateKey"
 ):
     MlDsa65PrivateKey.register(rust_openssl.mldsa.MlDsa65PrivateKey)
+
+
+class MlDsa87PublicKey(metaclass=abc.ABCMeta):
+    @classmethod
+    def from_public_bytes(cls, data: bytes) -> MlDsa87PublicKey:
+        from cryptography.hazmat.backends.openssl.backend import backend
+
+        if not backend.mldsa87_supported():
+            raise UnsupportedAlgorithm(
+                "ML-DSA-87 is not supported by this backend.",
+                _Reasons.UNSUPPORTED_PUBLIC_KEY_ALGORITHM,
+            )
+        m87 = getattr(rust_openssl, "mldsa87", None)
+        if m87 is None:
+            raise UnsupportedAlgorithm(
+                "ML-DSA-87 is not supported by this backend.",
+                _Reasons.UNSUPPORTED_PUBLIC_KEY_ALGORITHM,
+            )
+        return typing.cast(MlDsa87PublicKey, m87.from_public_bytes(data))
+
+    @abc.abstractmethod
+    def public_bytes(
+        self,
+        encoding: _serialization.Encoding,
+        format: _serialization.PublicFormat,
+    ) -> bytes:
+        """
+        The serialized bytes of the public key.
+        """
+
+    @abc.abstractmethod
+    def public_bytes_raw(self) -> bytes:
+        """
+        The raw bytes of the public key.
+        Equivalent to public_bytes(Raw, Raw).
+        """
+
+    @abc.abstractmethod
+    def verify(
+        self,
+        signature: Buffer,
+        data: Buffer,
+        context: Buffer | None = None,
+    ) -> None:
+        """
+        Verify the signature.
+        """
+
+    @abc.abstractmethod
+    def __eq__(self, other: object) -> bool:
+        """
+        Checks equality.
+        """
+
+    @abc.abstractmethod
+    def __copy__(self) -> MlDsa87PublicKey:
+        """
+        Returns a copy.
+        """
+
+    @abc.abstractmethod
+    def __deepcopy__(self, memo: dict) -> MlDsa87PublicKey:
+        """
+        Returns a deep copy.
+        """
+
+
+_mldsa87_mod = getattr(rust_openssl, "mldsa87", None)
+if _mldsa87_mod is not None and hasattr(_mldsa87_mod, "MlDsa87PublicKey"):
+    MlDsa87PublicKey.register(_mldsa87_mod.MlDsa87PublicKey)
+
+
+class MlDsa87PrivateKey(metaclass=abc.ABCMeta):
+    @classmethod
+    def generate(cls) -> MlDsa87PrivateKey:
+        from cryptography.hazmat.backends.openssl.backend import backend
+
+        if not backend.mldsa87_supported():
+            raise UnsupportedAlgorithm(
+                "ML-DSA-87 is not supported by this backend.",
+                _Reasons.UNSUPPORTED_PUBLIC_KEY_ALGORITHM,
+            )
+        m87 = getattr(rust_openssl, "mldsa87", None)
+        if m87 is None:
+            raise UnsupportedAlgorithm(
+                "ML-DSA-87 is not supported by this backend.",
+                _Reasons.UNSUPPORTED_PUBLIC_KEY_ALGORITHM,
+            )
+        return typing.cast(MlDsa87PrivateKey, m87.generate_key())
+
+    @classmethod
+    def from_seed_bytes(cls, data: Buffer) -> MlDsa87PrivateKey:
+        from cryptography.hazmat.backends.openssl.backend import backend
+
+        if not backend.mldsa87_supported():
+            raise UnsupportedAlgorithm(
+                "ML-DSA-87 is not supported by this backend.",
+                _Reasons.UNSUPPORTED_PUBLIC_KEY_ALGORITHM,
+            )
+        m87 = getattr(rust_openssl, "mldsa87", None)
+        if m87 is None:
+            raise UnsupportedAlgorithm(
+                "ML-DSA-87 is not supported by this backend.",
+                _Reasons.UNSUPPORTED_PUBLIC_KEY_ALGORITHM,
+            )
+        return typing.cast(MlDsa87PrivateKey, m87.from_seed_bytes(data))
+
+    @abc.abstractmethod
+    def public_key(self) -> MlDsa87PublicKey:
+        """
+        The MlDsa87PublicKey derived from the private key.
+        """
+
+    @abc.abstractmethod
+    def private_bytes(
+        self,
+        encoding: _serialization.Encoding,
+        format: _serialization.PrivateFormat,
+        encryption_algorithm: _serialization.KeySerializationEncryption,
+    ) -> bytes:
+        """
+        The serialized bytes of the private key.
+
+        This method only returns the serialization of the seed form of the
+        private key, never the expanded one.
+        """
+
+    @abc.abstractmethod
+    def seed_bytes(self) -> bytes:
+        """
+        The 32-byte seed used to generate this private key.
+        """
+
+    @abc.abstractmethod
+    def sign(self, data: Buffer, context: Buffer | None = None) -> bytes:
+        """
+        Signs the data.
+        """
+
+    @abc.abstractmethod
+    def __copy__(self) -> MlDsa87PrivateKey:
+        """
+        Returns a copy.
+        """
+
+    @abc.abstractmethod
+    def __deepcopy__(self, memo: dict) -> MlDsa87PrivateKey:
+        """
+        Returns a deep copy.
+        """
+
+
+if _mldsa87_mod is not None and hasattr(_mldsa87_mod, "MlDsa87PrivateKey"):
+    MlDsa87PrivateKey.register(_mldsa87_mod.MlDsa87PrivateKey)

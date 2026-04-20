@@ -22,6 +22,7 @@ fn main() {
         }
         if version >= 0x3_05_00_00_0 {
             println!("cargo:rustc-cfg=CRYPTOGRAPHY_OPENSSL_350_OR_GREATER");
+            println!("cargo:rustc-cfg=CRYPTOGRAPHY_MLDSA_SUPPORT");
         }
     }
 

@@ -367,13 +367,14 @@ class CertificateBuilder:
                 x448.X448PublicKey,
                 mldsa.MlDsa44PublicKey,
                 mldsa.MlDsa65PublicKey,
+                mldsa.MlDsa87PublicKey,
             ),
         ):
             raise TypeError(
                 "Expecting one of DSAPublicKey, RSAPublicKey,"
                 " EllipticCurvePublicKey, Ed25519PublicKey,"
                 " Ed448PublicKey, X25519PublicKey, X44PublicKey,"
-                " MlDsa44PublicKey, or MlDsa65PublicKey."
+                " MlDsa44PublicKey, MlDsa65PublicKey, or MlDsa87PublicKey."
             )
         if self._public_key is not None:
             raise ValueError("The public key may only be set once.")

@@ -300,10 +300,20 @@ class Backend:
         return True
 
     def mldsa44_supported(self) -> bool:
-        return rust_openssl.CRYPTOGRAPHY_OPENSSL_350_OR_GREATER
+        return rust_openssl.CRYPTOGRAPHY_MLDSA_SUPPORT
 
     def mldsa65_supported(self) -> bool:
-        return rust_openssl.CRYPTOGRAPHY_OPENSSL_350_OR_GREATER
+        return (
+            rust_openssl.CRYPTOGRAPHY_MLDSA_SUPPORT
+            or rust_openssl.CRYPTOGRAPHY_IS_AWSLC
+        )
+
+    def mldsa87_supported(self) -> bool:
+        return (
+            rust_openssl.CRYPTOGRAPHY_MLDSA_SUPPORT
+            and not rust_openssl.CRYPTOGRAPHY_IS_BORINGSSL
+            and not rust_openssl.CRYPTOGRAPHY_IS_AWSLC
+        )
 
 
 backend = Backend()

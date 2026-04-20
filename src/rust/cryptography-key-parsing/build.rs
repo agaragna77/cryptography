@@ -21,6 +21,7 @@ fn main() {
         let version = u64::from_str_radix(&version, 16).unwrap();
         if version >= 0x3050_0000 {
             println!("cargo:rustc-cfg=CRYPTOGRAPHY_OPENSSL_350_OR_GREATER");
+            println!("cargo:rustc-cfg=CRYPTOGRAPHY_MLDSA_SUPPORT");
         }
     }
 

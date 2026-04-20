@@ -61,7 +61,8 @@ union type aliases can be used instead to reference a multitude of key types.
     :class:`~cryptography.hazmat.primitives.asymmetric.x25519.X25519PublicKey`,
     :class:`~cryptography.hazmat.primitives.asymmetric.x448.X448PublicKey`,
     :class:`~cryptography.hazmat.primitives.asymmetric.mldsa.MlDsa44PublicKey`,
-    :class:`~cryptography.hazmat.primitives.asymmetric.mldsa.MlDsa65PublicKey`.
+    :class:`~cryptography.hazmat.primitives.asymmetric.mldsa.MlDsa65PublicKey`,
+    :class:`~cryptography.hazmat.primitives.asymmetric.mldsa.MlDsa87PublicKey`.
 
 .. data:: PrivateKeyTypes
 
@@ -77,7 +78,8 @@ union type aliases can be used instead to reference a multitude of key types.
     :class:`~cryptography.hazmat.primitives.asymmetric.x25519.X25519PrivateKey`,
     :class:`~cryptography.hazmat.primitives.asymmetric.x448.X448PrivateKey`,
     :class:`~cryptography.hazmat.primitives.asymmetric.mldsa.MlDsa44PrivateKey`,
-    :class:`~cryptography.hazmat.primitives.asymmetric.mldsa.MlDsa65PrivateKey`.
+    :class:`~cryptography.hazmat.primitives.asymmetric.mldsa.MlDsa65PrivateKey`,
+    :class:`~cryptography.hazmat.primitives.asymmetric.mldsa.MlDsa87PrivateKey`.
 
 .. data:: CertificatePublicKeyTypes
 
@@ -93,7 +95,8 @@ union type aliases can be used instead to reference a multitude of key types.
     :class:`~cryptography.hazmat.primitives.asymmetric.x25519.X25519PublicKey`,
     :class:`~cryptography.hazmat.primitives.asymmetric.x448.X448PublicKey`,
     :class:`~cryptography.hazmat.primitives.asymmetric.mldsa.MlDsa44PublicKey`,
-    :class:`~cryptography.hazmat.primitives.asymmetric.mldsa.MlDsa65PublicKey`.
+    :class:`~cryptography.hazmat.primitives.asymmetric.mldsa.MlDsa65PublicKey`,
+    :class:`~cryptography.hazmat.primitives.asymmetric.mldsa.MlDsa87PublicKey`.
 
 .. data:: CertificateIssuerPublicKeyTypes
 
@@ -110,7 +113,8 @@ union type aliases can be used instead to reference a multitude of key types.
     :class:`~cryptography.hazmat.primitives.asymmetric.ed25519.Ed25519PublicKey`,
     :class:`~cryptography.hazmat.primitives.asymmetric.ed448.Ed448PublicKey`,
     :class:`~cryptography.hazmat.primitives.asymmetric.mldsa.MlDsa44PublicKey`,
-    :class:`~cryptography.hazmat.primitives.asymmetric.mldsa.MlDsa65PublicKey`.
+    :class:`~cryptography.hazmat.primitives.asymmetric.mldsa.MlDsa65PublicKey`,
+    :class:`~cryptography.hazmat.primitives.asymmetric.mldsa.MlDsa87PublicKey`.
 
 .. data:: CertificateIssuerPrivateKeyTypes
 
@@ -127,4 +131,5 @@ union type aliases can be used instead to reference a multitude of key types.
     :class:`~cryptography.hazmat.primitives.asymmetric.ed25519.Ed25519PrivateKey`,
     :class:`~cryptography.hazmat.primitives.asymmetric.ed448.Ed448PrivateKey`,
     :class:`~cryptography.hazmat.primitives.asymmetric.mldsa.MlDsa44PrivateKey`,
-    :class:`~cryptography.hazmat.primitives.asymmetric.mldsa.MlDsa65PrivateKey`.
+    :class:`~cryptography.hazmat.primitives.asymmetric.mldsa.MlDsa65PrivateKey`,
+    :class:`~cryptography.hazmat.primitives.asymmetric.mldsa.MlDsa87PrivateKey`.

@@ -46,6 +46,7 @@ PKCS7PrivateKeyTypes = typing.Union[
     ec.EllipticCurvePrivateKey,
     mldsa.MlDsa44PrivateKey,
     mldsa.MlDsa65PrivateKey,
+    mldsa.MlDsa87PrivateKey,
 ]
 
 ContentEncryptionAlgorithm = typing.Union[
@@ -105,6 +106,7 @@ class PKCS7SignatureBuilder:
                 ec.EllipticCurvePrivateKey,
                 mldsa.MlDsa44PrivateKey,
                 mldsa.MlDsa65PrivateKey,
+                mldsa.MlDsa87PrivateKey,
             ),
         ):
             raise TypeError("Key must be RSA, EC, or ML-DSA")
@@ -115,6 +117,7 @@ class PKCS7SignatureBuilder:
             (
                 mldsa.MlDsa44PrivateKey,
                 mldsa.MlDsa65PrivateKey,
+                mldsa.MlDsa87PrivateKey,
             ),
         ):
             if hash_algorithm is not None:

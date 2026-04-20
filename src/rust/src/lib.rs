@@ -242,15 +242,21 @@ mod _rust {
         use crate::backend::kdf::kdf;
         #[pymodule_export]
         use crate::backend::keys::keys;
-        #[cfg(any(CRYPTOGRAPHY_IS_AWSLC, CRYPTOGRAPHY_OPENSSL_350_OR_GREATER))]
+        #[cfg(any(CRYPTOGRAPHY_IS_AWSLC, CRYPTOGRAPHY_MLDSA_SUPPORT))]
         #[pymodule_export]
         use crate::backend::mldsa::mldsa;
         #[cfg(all(
-            CRYPTOGRAPHY_OPENSSL_350_OR_GREATER,
+            CRYPTOGRAPHY_MLDSA_SUPPORT,
             not(any(CRYPTOGRAPHY_IS_BORINGSSL, CRYPTOGRAPHY_IS_AWSLC))
         ))]
         #[pymodule_export]
         use crate::backend::mldsa65::mldsa65;
+        #[cfg(all(
+            CRYPTOGRAPHY_MLDSA_SUPPORT,
+            not(any(CRYPTOGRAPHY_IS_BORINGSSL, CRYPTOGRAPHY_IS_AWSLC))
+        ))]
+        #[pymodule_export]
+        use crate::backend::mldsa87::mldsa87;
         #[pymodule_export]
         use crate::backend::poly1305::poly1305;
         #[pymodule_export]
@@ -282,6 +288,9 @@ mod _rust {
         const CRYPTOGRAPHY_IS_BORINGSSL: bool = cfg!(CRYPTOGRAPHY_IS_BORINGSSL);
         #[pymodule_export]
         const CRYPTOGRAPHY_IS_AWSLC: bool = cfg!(CRYPTOGRAPHY_IS_AWSLC);
+
+        #[pymodule_export]
+        const CRYPTOGRAPHY_MLDSA_SUPPORT: bool = cfg!(CRYPTOGRAPHY_MLDSA_SUPPORT);
 
         #[pymodule_init]
         fn init(openssl_mod: &pyo3::Bound<'_, pyo3::types::PyModule>) -> pyo3::PyResult<()> {
