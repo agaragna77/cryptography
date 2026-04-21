@@ -11,9 +11,9 @@ fn main() {
 
     if env::var("DEP_OPENSSL_BORINGSSL").is_ok() {
         println!("cargo:rustc-cfg=CRYPTOGRAPHY_IS_BORINGSSL");
-        // Do not set CRYPTOGRAPHY_MLDSA_SUPPORT here: pkcs8/spki ML-DSA paths use
-        // openssl::pkey_ml_dsa (ossl350 in rust-openssl), which is unavailable when
-        // linking BoringSSL. Boring ML-DSA-44 is handled in cryptography-rust only.
+        // BoringSSL: enable ML-DSA PKCS#8 / SPKI helpers. rust-openssl exposes
+        // `pkey_ml_dsa` for boringssl (not only ossl350).
+        println!("cargo:rustc-cfg=CRYPTOGRAPHY_MLDSA_SUPPORT");
     }
 
     if env::var("DEP_OPENSSL_AWSLC").is_ok() {

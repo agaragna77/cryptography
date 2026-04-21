@@ -270,7 +270,7 @@ pub fn parse_private_key(
         }
         #[cfg(all(
             CRYPTOGRAPHY_MLDSA_SUPPORT,
-            not(any(CRYPTOGRAPHY_IS_BORINGSSL, CRYPTOGRAPHY_IS_AWSLC))
+            not(CRYPTOGRAPHY_IS_AWSLC)
         ))]
         AlgorithmParameters::MlDsa87 => {
             // RFC 9881 Section 6 defines three CHOICE formats for ML-DSA private keys:
@@ -682,7 +682,7 @@ pub fn serialize_private_key(
                     (AlgorithmParameters::MlDsa65, private_key_der)
                 } else {
                     cfg_if::cfg_if! {
-                        if #[cfg(not(any(CRYPTOGRAPHY_IS_BORINGSSL, CRYPTOGRAPHY_IS_AWSLC)))] {
+                        if #[cfg(not(CRYPTOGRAPHY_IS_AWSLC))] {
                             if let Some(ml_dsa_params) =
                                 pkey.ml_dsa(openssl::pkey_ml_dsa::Variant::MlDsa87)?
                             {

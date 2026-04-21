@@ -130,7 +130,7 @@ pub fn parse_public_key(
             cfg_if::cfg_if! {
                 if #[cfg(all(
                     CRYPTOGRAPHY_MLDSA_SUPPORT,
-                    not(any(CRYPTOGRAPHY_IS_BORINGSSL, CRYPTOGRAPHY_IS_AWSLC))
+                    not(CRYPTOGRAPHY_IS_AWSLC)
                 ))] {
                     Ok(openssl::pkey::PKey::public_key_from_raw_bytes_ex(
                         k.subject_public_key.as_bytes(),

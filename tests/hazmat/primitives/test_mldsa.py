@@ -282,11 +282,13 @@ class TestMlDsa65:
 
 
 @pytest.mark.supported(
-    only_if=lambda backend: backend.mldsa_supported(),
-    skip_message="Requires a backend with ML-DSA-65 support",
+    only_if=lambda backend: backend.mldsa_supported()
+    and not backend.mldsa44_supported(),
+    skip_message="Requires ML-DSA without ML-DSA-44 (e.g. AWS-LC ML-DSA-65 only)",
 )
 def test_unsupported_mldsa_variant_private_key(backend):
-    # ML-DSA-44 is not supported; loading it must raise UnsupportedAlgorithm.
+    # When ML-DSA-44 is not compiled in, loading a 44 PKCS#8 must raise
+    # UnsupportedAlgorithm. BoringSSL/OpenSSL 3.5+ expose 44 and load this key.
     pkcs8_der = load_vectors_from_file(
         os.path.join("asymmetric", "MLDSA", "mldsa44_priv.der"),
         lambda derfile: derfile.read(),
@@ -317,11 +319,13 @@ def test_mldsa65_private_key_no_seed(backend):
 
 
 @pytest.mark.supported(
-    only_if=lambda backend: backend.mldsa_supported(),
-    skip_message="Requires a backend with ML-DSA-65 support",
+    only_if=lambda backend: backend.mldsa_supported()
+    and not backend.mldsa44_supported(),
+    skip_message="Requires ML-DSA without ML-DSA-44 (e.g. AWS-LC ML-DSA-65 only)",
 )
 def test_unsupported_mldsa_variant_public_key(backend):
-    # ML-DSA-44 is not supported; loading it must raise UnsupportedAlgorithm.
+    # When ML-DSA-44 is not compiled in, loading a 44 SPKI must raise
+    # UnsupportedAlgorithm. BoringSSL/OpenSSL 3.5+ expose 44 and load this key.
     spki_der = load_vectors_from_file(
         os.path.join("asymmetric", "MLDSA", "mldsa44_pub.der"),
         lambda derfile: derfile.read(),

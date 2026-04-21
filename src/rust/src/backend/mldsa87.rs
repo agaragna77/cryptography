@@ -2,10 +2,23 @@
 // 2.0, and the BSD License. See the LICENSE file in the root of this repository
 // for complete details.
 
+use pyo3::types::PyAnyMethods;
+
 use crate::backend::utils;
 use crate::buf::CffiBuf;
 use crate::error::{CryptographyError, CryptographyResult};
 use crate::exceptions;
+
+const MAX_CONTEXT_BYTES: usize = 255;
+
+fn ensure_ml_dsa_context_len(ctx: &[u8]) -> CryptographyResult<()> {
+    if ctx.len() > MAX_CONTEXT_BYTES {
+        return Err(CryptographyError::from(
+            pyo3::exceptions::PyValueError::new_err("Context must be at most 255 bytes"),
+        ));
+    }
+    Ok(())
+}
 
 #[pyo3::pyclass(frozen, module = "cryptography.hazmat.bindings._rust.openssl.mldsa87")]
 pub(crate) struct MlDsa87PrivateKey {
@@ -66,6 +79,9 @@ impl MlDsa87PrivateKey {
         data: CffiBuf<'_>,
         context: Option<CffiBuf<'_>>,
     ) -> CryptographyResult<pyo3::Bound<'p, pyo3::types::PyBytes>> {
+        if let Some(ref ctx) = context {
+            ensure_ml_dsa_context_len(ctx.as_bytes())?;
+        }
         if let Some(ctx) = context {
             let signature = openssl::pkey_ml_dsa::sign_with_context(
                 &self.pkey,
@@ -122,6 +138,13 @@ impl MlDsa87PrivateKey {
         Ok(pyo3::types::PyBytes::new(py, seed))
     }
 
+    fn private_bytes_raw<'p>(
+        &self,
+        py: pyo3::Python<'p>,
+    ) -> CryptographyResult<pyo3::Bound<'p, pyo3::types::PyBytes>> {
+        self.seed_bytes(py)
+    }
+
     fn private_bytes<'p>(
         slf: &pyo3::Bound<'p, Self>,
         py: pyo3::Python<'p>,
@@ -129,6 +152,12 @@ impl MlDsa87PrivateKey {
         format: crate::serialization::PrivateFormat,
         encryption_algorithm: &pyo3::Bound<'p, pyo3::PyAny>,
     ) -> CryptographyResult<pyo3::Bound<'p, pyo3::types::PyBytes>> {
+        if encoding == crate::serialization::Encoding::Raw
+            && format == crate::serialization::PrivateFormat::Raw
+            && encryption_algorithm.is_instance(&crate::types::NO_ENCRYPTION.get(py)?)?
+        {
+            return slf.borrow().private_bytes_raw(py);
+        }
         utils::pkey_private_bytes(
             py,
             slf,
@@ -162,6 +191,9 @@ impl MlDsa87PublicKey {
         data: CffiBuf<'_>,
         context: Option<CffiBuf<'_>>,
     ) -> CryptographyResult<()> {
+        if let Some(ref ctx) = context {
+            ensure_ml_dsa_context_len(ctx.as_bytes())?;
+        }
         let valid = if let Some(ctx) = context {
             openssl::pkey_ml_dsa::verify_with_context(
                 &self.pkey,
