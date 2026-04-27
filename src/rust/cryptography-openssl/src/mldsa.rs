@@ -28,23 +28,11 @@ pub enum MlDsaVariant {
 #[cfg(CRYPTOGRAPHY_IS_AWSLC)]
 pub const PKEY_ID: openssl::pkey::Id = openssl::pkey::Id::from_raw(ffi::NID_PQDSA);
 
-#[cfg(CRYPTOGRAPHY_OPENSSL_350_OR_GREATER)]
-fn ossl_ml_dsa_sn_nids() -> [i32; 3] {
-    // OBJ_sn2nid for ML-DSA object short names (OpenSSL 3.5+).
-    unsafe {
-        [
-            ffi::OBJ_sn2nid(c"id-ml-dsa-44".as_ptr().cast()),
-            ffi::OBJ_sn2nid(c"id-ml-dsa-65".as_ptr().cast()),
-            ffi::OBJ_sn2nid(c"id-ml-dsa-87".as_ptr().cast()),
-        ]
-    }
-}
-
 /// Stock OpenSSL reports ML-DSA `EVP_PKEY` types with an `Id` that may not match
-/// `OBJ_sn2nid("id-ml-dsa-…")`. `EVP_PKEY_is_a` matches the provider key type
-/// string and works for both public and private keys.
+/// the short-name NIDs. `EVP_PKEY_is_a` matches the provider key type string and
+/// works for both public and private keys.
 #[cfg(CRYPTOGRAPHY_OPENSSL_350_OR_GREATER)]
-pub fn openssl_mldsa_key_by_is_a<T: openssl::pkey::HasPublic>(
+pub(crate) fn openssl_mldsa_key_by_is_a<T: openssl::pkey::HasPublic>(
     pkey: &openssl::pkey::PKeyRef<T>,
 ) -> bool {
     unsafe {
@@ -55,22 +43,48 @@ pub fn openssl_mldsa_key_by_is_a<T: openssl::pkey::HasPublic>(
 }
 
 /// True if this key should use ML-DSA PKCS#8 / SPKI serialization logic.
+///
+/// On stock OpenSSL 3.5+, prefer this over [`is_mldsa_pkey_type`] with an `Id`
+/// alone: the reported `Id` can disagree with the provider while
+/// `EVP_PKEY_is_a` still recognizes the key.
 pub fn is_mldsa_pkey_for_serialization<T: openssl::pkey::HasPublic>(
     id: openssl::pkey::Id,
     pkey: &openssl::pkey::PKeyRef<T>,
 ) -> bool {
-    if is_mldsa_pkey_type(id) {
-        return true;
+    cfg_if::cfg_if! {
+        if #[cfg(CRYPTOGRAPHY_IS_BORINGSSL)] {
+            let _ = pkey;
+            is_mldsa_pkey_type(id)
+        } else if #[cfg(CRYPTOGRAPHY_IS_AWSLC)] {
+            let _ = pkey;
+            is_mldsa_pkey_type(id)
+        } else if #[cfg(CRYPTOGRAPHY_OPENSSL_350_OR_GREATER)] {
+            let _ = id;
+            openssl_mldsa_key_by_is_a(pkey)
+        } else {
+            let _pkey = pkey;
+            false
+        }
     }
-    #[cfg(CRYPTOGRAPHY_OPENSSL_350_OR_GREATER)]
-    {
-        openssl_mldsa_key_by_is_a(pkey)
+}
+
+#[cfg(CRYPTOGRAPHY_OPENSSL_350_OR_GREATER)]
+const OSSL_MLDSA_VARIANT_PAIRS: [(MlDsaVariant, openssl::pkey_ml_dsa::Variant); 3] = [
+    (MlDsaVariant::MlDsa44, openssl::pkey_ml_dsa::Variant::MlDsa44),
+    (MlDsaVariant::MlDsa65, openssl::pkey_ml_dsa::Variant::MlDsa65),
+    (MlDsaVariant::MlDsa87, openssl::pkey_ml_dsa::Variant::MlDsa87),
+];
+
+#[cfg(CRYPTOGRAPHY_OPENSSL_350_OR_GREATER)]
+fn openssl_ml_dsa_variant_from_pkey<T: openssl::pkey::HasPublic>(
+    pkey: &openssl::pkey::PKeyRef<T>,
+) -> Option<MlDsaVariant> {
+    for &(v, ov) in &OSSL_MLDSA_VARIANT_PAIRS {
+        if matches!(pkey.ml_dsa(ov), Ok(Some(_))) {
+            return Some(v);
+        }
     }
-    #[cfg(not(CRYPTOGRAPHY_OPENSSL_350_OR_GREATER))]
-    {
-        let _ = pkey;
-        false
-    }
+    None
 }
 
 /// Extract the 32-byte seed from an OpenSSL 3.5+ ML-DSA private key (OSSL_PARAM),
@@ -79,12 +93,16 @@ pub fn is_mldsa_pkey_for_serialization<T: openssl::pkey::HasPublic>(
 pub fn private_key_seed_bytes(
     pkey: &openssl::pkey::PKeyRef<openssl::pkey::Private>,
 ) -> OpenSSLResult<[u8; 32]> {
-    use openssl::pkey_ml_dsa::Variant;
-    for v in [Variant::MlDsa44, Variant::MlDsa65, Variant::MlDsa87] {
-        match pkey.ml_dsa(v) {
+    for &(_, ov) in &OSSL_MLDSA_VARIANT_PAIRS {
+        match pkey.ml_dsa(ov) {
             Ok(Some(params)) => {
                 let seed = params.private_key_seed()?;
-                return <[u8; 32]>::try_from(seed).map_err(|_| openssl::error::ErrorStack::get());
+                if seed.len() != 32 {
+                    return Err(openssl::error::ErrorStack::get());
+                }
+                let mut out = [0u8; 32];
+                out.copy_from_slice(&seed);
+                return Ok(out);
             }
             Ok(None) | Err(_) => continue,
         }
@@ -101,6 +119,12 @@ fn to_ossl_variant(v: MlDsaVariant) -> openssl::pkey_ml_dsa::Variant {
     }
 }
 
+/// Whether `id` is the ML-DSA key type for this backend.
+///
+/// On stock OpenSSL 3.5+, this is **not** reliable when you only have an `Id`
+/// from OpenSSL (it can disagree with the provider). Use
+/// [`is_mldsa_pkey_for_serialization`] when a [`openssl::pkey::PKeyRef`] is
+/// available.
 pub fn is_mldsa_pkey_type(id: openssl::pkey::Id) -> bool {
     cfg_if::cfg_if! {
         if #[cfg(CRYPTOGRAPHY_IS_BORINGSSL)] {
@@ -109,9 +133,11 @@ pub fn is_mldsa_pkey_type(id: openssl::pkey::Id) -> bool {
         } else if #[cfg(CRYPTOGRAPHY_IS_AWSLC)] {
             id == PKEY_ID
         } else if #[cfg(CRYPTOGRAPHY_OPENSSL_350_OR_GREATER)] {
-            let raw = id.as_raw();
-            let nids = ossl_ml_dsa_sn_nids();
-            nids.contains(&raw)
+            let _ = id;
+            false
+        } else {
+            let _ = id;
+            false
         }
     }
 }
@@ -148,16 +174,7 @@ impl MlDsaVariant {
                     _ => panic!("Unsupported ML-DSA variant"),
                 }
             } else if #[cfg(CRYPTOGRAPHY_OPENSSL_350_OR_GREATER)] {
-                for (v, ov) in [
-                    (MlDsaVariant::MlDsa44, openssl::pkey_ml_dsa::Variant::MlDsa44),
-                    (MlDsaVariant::MlDsa65, openssl::pkey_ml_dsa::Variant::MlDsa65),
-                    (MlDsaVariant::MlDsa87, openssl::pkey_ml_dsa::Variant::MlDsa87),
-                ] {
-                    if let Ok(Some(_)) = pkey.ml_dsa(ov) {
-                        return v;
-                    }
-                }
-                panic!("Unsupported ML-DSA variant");
+                openssl_ml_dsa_variant_from_pkey(pkey).expect("Unsupported ML-DSA variant")
             }
         }
     }
@@ -266,19 +283,7 @@ fn ossl_sign(
     data: &[u8],
     context: &[u8],
 ) -> OpenSSLResult<Vec<u8>> {
-    use openssl::pkey_ctx::PkeyCtx;
-    use openssl::signature::Signature;
-
-    if context.is_empty() {
-        let mut algo = Signature::for_ml_dsa(variant)?;
-        let mut signature = Vec::new();
-        let mut ctx = PkeyCtx::new(pkey)?;
-        ctx.sign_message_init(&mut algo)?;
-        ctx.sign_to_vec(data, &mut signature)?;
-        Ok(signature)
-    } else {
-        openssl::pkey_ml_dsa::sign_with_context(&pkey.to_owned(), variant, data, context)
-    }
+    openssl::pkey_ml_dsa::sign_with_context(&pkey.to_owned(), variant, data, context)
 }
 
 #[cfg(CRYPTOGRAPHY_OPENSSL_350_OR_GREATER)]
@@ -289,23 +294,13 @@ fn ossl_verify(
     data: &[u8],
     context: &[u8],
 ) -> OpenSSLResult<bool> {
-    use openssl::pkey_ctx::PkeyCtx;
-    use openssl::signature::Signature;
-
-    if context.is_empty() {
-        let mut algo = Signature::for_ml_dsa(variant)?;
-        let mut ctx = PkeyCtx::new(pkey)?;
-        ctx.verify_message_init(&mut algo)?;
-        Ok(ctx.verify(data, signature).unwrap_or(false))
-    } else {
-        openssl::pkey_ml_dsa::verify_with_context(
-            &pkey.to_owned(),
-            variant,
-            data,
-            signature,
-            context,
-        )
-    }
+    openssl::pkey_ml_dsa::verify_with_context(
+        &pkey.to_owned(),
+        variant,
+        data,
+        signature,
+        context,
+    )
 }
 
 pub fn new_raw_private_key(
