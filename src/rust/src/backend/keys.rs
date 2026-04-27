@@ -195,8 +195,12 @@ fn private_key_from_pkey<'p>(
                 }
             }
         }
-        #[cfg(any(CRYPTOGRAPHY_IS_BORINGSSL, CRYPTOGRAPHY_IS_AWSLC))]
-        id if cryptography_openssl::mldsa::is_mldsa_pkey_type(id) => {
+        #[cfg(any(
+            CRYPTOGRAPHY_IS_BORINGSSL,
+            CRYPTOGRAPHY_IS_AWSLC,
+            CRYPTOGRAPHY_OPENSSL_350_OR_GREATER
+        ))]
+        id if cryptography_openssl::mldsa::is_mldsa_pkey_for_serialization(id, pkey) => {
             match cryptography_openssl::mldsa::MlDsaVariant::from_pkey(pkey) {
                 cryptography_openssl::mldsa::MlDsaVariant::MlDsa44 => {
                     Ok(crate::backend::mldsa::mldsa44_private_key_from_pkey(pkey)
@@ -386,8 +390,12 @@ fn public_key_from_pkey<'p>(
             }
         }
 
-        #[cfg(any(CRYPTOGRAPHY_IS_BORINGSSL, CRYPTOGRAPHY_IS_AWSLC))]
-        id if cryptography_openssl::mldsa::is_mldsa_pkey_type(id) => {
+        #[cfg(any(
+            CRYPTOGRAPHY_IS_BORINGSSL,
+            CRYPTOGRAPHY_IS_AWSLC,
+            CRYPTOGRAPHY_OPENSSL_350_OR_GREATER
+        ))]
+        id if cryptography_openssl::mldsa::is_mldsa_pkey_for_serialization(id, pkey) => {
             match cryptography_openssl::mldsa::MlDsaVariant::from_pkey(pkey) {
                 cryptography_openssl::mldsa::MlDsaVariant::MlDsa44 => {
                     Ok(crate::backend::mldsa::mldsa44_public_key_from_pkey(pkey)

@@ -282,6 +282,10 @@ class Backend:
         return (
             rust_openssl.CRYPTOGRAPHY_IS_AWSLC
             or rust_openssl.CRYPTOGRAPHY_IS_BORINGSSL
+            or (
+                rust_openssl.CRYPTOGRAPHY_OPENSSL_350_OR_GREATER
+                and not rust_openssl.CRYPTOGRAPHY_IS_LIBRESSL
+            )
         )
 
     def ed25519_supported(self) -> bool:
